@@ -184,6 +184,3 @@ class WeatherService(object):
         outputFilePath = os.path.join(self.outputFolder, outputFileName)
 
         np.savetxt(outputFilePath, windDataArray, delimiter=",")
-
-weatherService = WeatherService()
-weatherService.start()
