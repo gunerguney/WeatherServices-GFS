@@ -58,15 +58,17 @@ class WeatherService(object):
     def parseGrib(self, grb):
 
         absVorticitySet = grb.select(name="Absolute vorticity")
-        tempDataSet = grb.select(name="Temperature")
+        relHumiditySet = grb.select(name="Relative humidity")
+        tempSet = grb.select(name="Temperature")
         totalCloudCoverSet = grb.select(name="Total Cloud Cover")
-        uWindDataSet = grb.select(name="U component of wind")
-        vWindDataSet = grb.select(name="V component of wind")
+        uWindSet = grb.select(name="U component of wind")
+        vWindSet = grb.select(name="V component of wind")
 
-        self.parseTemperature(tempDataSet)
+        self.parseTemperature(tempSet)
+        self.parseHumidity(relHumiditySet)
         self.parseVorticity(absVorticitySet)
         self.parseCloud(totalCloudCoverSet)
-        self.parseWind(uWindDataSet, vWindDataSet)
+        self.parseWind(uWindSet, vWindSet)
 
 
         # left = tempDataSet[0]['longitudes'][0]
@@ -111,6 +113,30 @@ class WeatherService(object):
 
         np.savetxt(outputFilePath, tempDataArray, delimiter=",")
 
+    def parseHumidity(self, dataSet):
+
+        humidityDataArray = None
+
+        level = 0
+
+        for humidityLevel in dataSet:
+
+            if level == 0:
+                humidityDataArray = np.array(humidityLevel.values)
+                level += 1
+
+            else:
+                humidityDataArray = np.concatenate((humidityDataArray, humidityLevel.values), axis=0)
+                level += 1
+
+        humidityDataArray = humidityDataArray.round(decimals=1)
+
+        outputFileName = self.outputFileDateTime + "_humidity.csv"
+
+        outputFilePath = os.path.join(self.outputFolder, outputFileName)
+
+        np.savetxt(outputFilePath, humidityDataArray, delimiter=",")
+
     def parseVorticity(self, dataSet):
 
         vorticityDataArray = None
@@ -127,7 +153,7 @@ class WeatherService(object):
                 vorticityDataArray = np.concatenate((vorticityDataArray, vorticityLevel.values), axis=0)
                 level += 1
 
-        vorticityDataArray = vorticityDataArray.round(decimals=1)
+        #vorticityDataArray = vorticityDataArray.round(decimals=1)
 
         outputFileName = self.outputFileDateTime + "_vorticity.csv"
 
